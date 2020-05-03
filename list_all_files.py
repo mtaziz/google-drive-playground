@@ -48,14 +48,19 @@ def main():
 
     service = build('drive', 'v3', credentials=creds)
 
-    # Call the Drive v3 API
-    results = service.files().list(
-        pageSize=10, fields="nextPageToken, files(id, name)").execute()
-    items = results.get('files', [])
+    files = service.files()
+    request = files.list(pageSize=100, fields="nextPageToken, files(id, name)")
+    while request is not None:
+        files_doc = request.execute()
+        list_files(files_doc)
+        request = files.list_next(request, files_doc)
 
-    if not items:
+
+def list_files(results):
+    if not results:
         print('No files found.')
     else:
+        items = results.get('files', [])
         print('Files:')
         for item in items:
             print(u'{0} ({1})'.format(item['name'], item['id']))
